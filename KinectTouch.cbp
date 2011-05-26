@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="Rabat" />
+		<Option title="KinectTouch" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/Rabat" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/KinectTouch" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -16,20 +16,25 @@
 					<Add option="-DUSE_GLUT" />
 					<Add directory="/usr/include/nite" />
 					<Add directory="/usr/include/ni" />
+					<Add directory="/usr/include/opencv" />
+					<Add directory="src/TUIO" />
+					<Add directory="src/oscpack" />
 				</Compiler>
 				<Linker>
 					<Add library="glut" />
 					<Add library="OpenNI" />
 					<Add library="XnVNite_1_3_1" />
+					<Add library="cv" />
+					<Add library="highgui" />
 				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/Rabat" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/KinectTouch" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -39,6 +44,38 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="src/KinectTouch.cpp" />
+		<Unit filename="src/TUIO/TuioClient.cpp" />
+		<Unit filename="src/TUIO/TuioClient.h" />
+		<Unit filename="src/TUIO/TuioContainer.h" />
+		<Unit filename="src/TUIO/TuioCursor.h" />
+		<Unit filename="src/TUIO/TuioListener.h" />
+		<Unit filename="src/TUIO/TuioObject.h" />
+		<Unit filename="src/TUIO/TuioPoint.h" />
+		<Unit filename="src/TUIO/TuioServer.cpp" />
+		<Unit filename="src/TUIO/TuioServer.h" />
+		<Unit filename="src/TUIO/TuioTime.cpp" />
+		<Unit filename="src/TUIO/TuioTime.h" />
+		<Unit filename="src/oscpack/ip/IpEndpointName.cpp" />
+		<Unit filename="src/oscpack/ip/IpEndpointName.h" />
+		<Unit filename="src/oscpack/ip/NetworkingUtils.h" />
+		<Unit filename="src/oscpack/ip/PacketListener.h" />
+		<Unit filename="src/oscpack/ip/TimerListener.h" />
+		<Unit filename="src/oscpack/ip/UdpSocket.h" />
+		<Unit filename="src/oscpack/ip/posix/NetworkingUtils.cpp" />
+		<Unit filename="src/oscpack/ip/posix/UdpSocket.cpp" />
+		<Unit filename="src/oscpack/osc/MessageMappingOscPacketListener.h" />
+		<Unit filename="src/oscpack/osc/OscException.h" />
+		<Unit filename="src/oscpack/osc/OscHostEndianness.h" />
+		<Unit filename="src/oscpack/osc/OscOutboundPacketStream.cpp" />
+		<Unit filename="src/oscpack/osc/OscOutboundPacketStream.h" />
+		<Unit filename="src/oscpack/osc/OscPacketListener.h" />
+		<Unit filename="src/oscpack/osc/OscPrintReceivedElements.cpp" />
+		<Unit filename="src/oscpack/osc/OscPrintReceivedElements.h" />
+		<Unit filename="src/oscpack/osc/OscReceivedElements.cpp" />
+		<Unit filename="src/oscpack/osc/OscReceivedElements.h" />
+		<Unit filename="src/oscpack/osc/OscTypes.cpp" />
+		<Unit filename="src/oscpack/osc/OscTypes.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />
