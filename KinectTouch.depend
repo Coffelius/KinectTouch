@@ -1,10 +1,10 @@
 # depslib dependency file v1.0
-1306375306 source:/home/coffee/kinect/KinectTouch/src/KinectTouch.cpp
+1306878009 source:/home/coffee/kinect/KinectTouch/src/KinectTouch.cpp
 	<iostream>
 	<vector>
 	<map>
-	<opencv/highgui.h>
-	<opencv/cv.h>
+	<highgui.h>
+	<cv.h>
 	<XnOpenNI.h>
 	<XnCppWrapper.h>
 	"TuioServer.h"
@@ -274,4 +274,93 @@
 
 1306375306 source:/home/coffee/kinect/KinectTouch/src/oscpack/osc/OscTypes.cpp
 	"OscTypes.h"
+
+1306875167 source:/home/coffee/kinect/KinectTouch/src/surfcalibration.cpp
+	<cv.h>
+	<highgui.h>
+	<ctype.h>
+	<stdio.h>
+	<stdlib.h>
+	<iostream>
+	<vector>
+
+1270517080 /usr/include/opencv/cv.h
+	<chdl.h>
+	"cxcore.h"
+	"cvtypes.h"
+	"cv.hpp"
+	"cvcompat.h"
+
+1270517080 /usr/include/opencv/cxcore.h
+	"ipl.h"
+	"ipl/ipl.h"
+	"cxtypes.h"
+	"cxerror.h"
+	"cvver.h"
+	"cxcore.hpp"
+
+1270517080 /usr/include/opencv/cxtypes.h
+	<assert.h>
+	<stdlib.h>
+	<string.h>
+	<float.h>
+	<stdint.h>
+	<intrin.h>
+	<emmintrin.h>
+	<fastmath.h>
+	<math.h>
+	<ipl.h>
+	<ipl/ipl.h>
+
+1270517080 /usr/include/opencv/cxerror.h
+
+1270517080 /usr/include/opencv/cvver.h
+
+1270517080 /usr/include/opencv/cxcore.hpp
+	"cxmisc.h"
+	<algorithm>
+	<cmath>
+	<complex>
+	<map>
+	<new>
+	<string>
+	<vector>
+	"cxoperations.hpp"
+	"cxmat.hpp"
+	"cxflann.h"
+
+1270517080 /usr/include/opencv/cxmisc.h
+	<limits.h>
+	<malloc.h>
+	<alloca.h>
+	<stdlib.h>
+
+1270517080 /usr/include/opencv/cxoperations.hpp
+	<string.h>
+	<limits.h>
+	<ext/atomicity.h>
+	<bits/atomicity.h>
+	"windows.h"
+
+1270517080 /usr/include/opencv/cxmat.hpp
+	<limits.h>
+
+1270517080 /usr/include/opencv/cxflann.h
+
+1270517080 /usr/include/opencv/cvtypes.h
+	<assert.h>
+	<stdlib.h>
+
+1270517080 /usr/include/opencv/cv.hpp
+
+1270517080 /usr/include/opencv/cvcompat.h
+	<string.h>
+
+1270517080 /usr/include/opencv/highgui.h
+	"cxcore.h"
+	<windows.h>
+	<chdl.h>
+	"highgui.hpp"
+
+1270517080 /usr/include/opencv/highgui.hpp
 

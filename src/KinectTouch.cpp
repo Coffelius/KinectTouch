@@ -19,8 +19,8 @@
 using namespace std;
 
 // openCV
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+#include <highgui.h>
+#include <cv.h>
 using namespace cv;
 
 // openNI
@@ -88,7 +88,93 @@ void average(vector<Mat1s>& frames, Mat1s& mean) {
 }
 
 
+CvSeq *imageKeypoints = 0, *imageDescriptors = 0;
+CvPoint src_corners[4];
+void initMarker(void) {
+    //Mat1b image=imread("marker.png", 0);
+    IplImage* image = cvLoadImage( "marker640.png", CV_LOAD_IMAGE_GRAYSCALE );
+    src_corners = {{0,0}, {image->width,0}, {image->width, image->height}, {0, image->height}};
 
+    CvSURFParams params = cvSURFParams(500, 1);
+
+    CvMemStorage *storage=cvCreateMemStorage(0);
+    cvExtractSURF( image, 0, &imageKeypoints, &imageDescriptors, storage, params );
+
+//    imshow("Ajuste", image);
+    cvReleaseImage(&image);
+
+}
+
+int calibrating=25;
+CvPoint dst_corners[4];
+
+
+double hMat[8], hIMat[8];
+
+inline CvPoint2D32f trans(CvPoint2D32f *src, double *h) {
+
+
+        double x = src->x, y = src->y;
+        double Z = 1./(h[6]*x + h[7]*y + h[8]);
+        double X = (h[0]*x + h[1]*y + h[2])*Z;
+        double Y = (h[3]*x + h[4]*y + h[5])*Z;
+    //return cvPoint2D32f(cvRound(X), cvRound(Y));
+    return cvPoint2D32f(X, Y);
+
+}
+int
+locatePlanarObject( const CvSeq* objectKeypoints, const CvSeq* objectDescriptors,
+                    const CvSeq* imageKeypoints, const CvSeq* imageDescriptors,
+                    const CvPoint src_corners[4], CvPoint dst_corners[4], double *h );
+void calibrate(void)
+{
+    if(!calibrating) return;
+    calibrating--;
+    Mat3b rgb(480, 640);
+    rgb.data = (uchar *)xnImgeGenertor.GetImageMap();//.GetRGB24ImageMap();//xnImgeGenertor.GetImageMap();
+    if(!rgb.data) return;
+#ifdef DEBUG
+
+    Mat3b out(480,640);
+    cvtColor(rgb, out, CV_BGR2RGB);
+    IplImage iOut=out;
+#endif
+    //cvCopy(&((IplImage)rgb), &((IplImage)out), NULL);
+
+    Mat1b gray(480,640);
+    cvtColor(rgb, gray, CV_RGB2GRAY);
+   // imshow("gray", gray);
+    CvSeq *keypoints = 0, *descriptors = 0;
+
+    CvSURFParams params = cvSURFParams(500, 1);
+
+    CvMemStorage *storage=cvCreateMemStorage(0);
+    cvExtractSURF( &(IplImage)gray, 0, &keypoints, &descriptors, storage, params );
+
+    if( locatePlanarObject(  imageKeypoints,
+        imageDescriptors,keypoints, descriptors, src_corners, dst_corners, hMat ))
+    {
+
+        CvMat _hMat = cvMat(3, 3, CV_64F, hMat);
+        CvMat _hIMat = cvMat(3,3, CV_64F, hIMat);
+
+        cvInvert(&_hMat, &_hIMat);
+
+#ifdef DEBUG
+
+        for( int i = 0; i < 4; i++ )
+        {
+            CvPoint r1 = dst_corners[i%4];
+            CvPoint r2 = dst_corners[(i+1)%4];
+            cvLine(&(IplImage)out, cvPoint(r1.x, r1.y ),
+                cvPoint(r2.x, r2.y ), cvScalar(0,0,255,0) );
+        }
+#endif
+    }
+#ifdef DEBUG
+    imshow("out", out);
+#endif
+}
 int main() {
 
 	const unsigned int nBackgroundTrain = 30;
@@ -104,14 +190,14 @@ int main() {
 	const Scalar debugColor1(255,0,0);
 	const Scalar debugColor2(255,255,255);
 
-	int xMin = 110;
-	int xMax = 560;
-	int yMin = 120;
-	int yMax = 320;
+	int xMin = 0;
+	int xMax = 640;
+	int yMin = 0;
+	int yMax = 480;
 
 	Mat1s depth(480, 640); // 16 bit depth (in millimeters)
 	Mat1b depth8(480, 640); // 8 bit depth
-	Mat3b rgb(480, 640); // 8 bit depth
+	//Mat3b rgb(480, 640); // 8 bit depth
 
 	Mat3b debug(480, 640); // debug visualization
 
@@ -134,12 +220,17 @@ int main() {
 	}
 	TuioTime time;
 
+    initMarker();
 	// create some sliders
+	#ifdef DEBUG
 	namedWindow(windowName);
+	#endif
+	/*
 	createTrackbar("xMin", windowName, &xMin, 640);
 	createTrackbar("xMax", windowName, &xMax, 640);
 	createTrackbar("yMin", windowName, &yMin, 480);
 	createTrackbar("yMax", windowName, &yMax, 480);
+*/
 
 	// create background model (average depth)
 	for (unsigned int i=0; i<nBackgroundTrain; i++) {
@@ -148,7 +239,9 @@ int main() {
 		buffer[i] = depth;
 	}
 	average(buffer, background);
-
+    xnImgeGenertor.SetPixelFormat( XN_PIXEL_FORMAT_RGB24);
+    //xnImgeGenertor.GetAlternativeViewPointCap().SetViewPoint (xnDepthGenerator);
+    xnDepthGenerator.GetAlternativeViewPointCap().SetViewPoint(xnImgeGenertor);
 	while ( waitKey(1) != 27 ) {
 		// read available data
 		xnContext.WaitAndUpdateAll();
@@ -162,6 +255,7 @@ int main() {
 		// update rgb image
 		//rgb.data = (uchar*) xnImgeGenertor.GetRGB24ImageMap(); // segmentation fault here
 		//cvtColor(rgb, rgb, CV_RGB2BGR);
+		calibrate();
 
 		// extract foreground by simple subtraction of very basic background model
 		foreground = background - depth;
@@ -192,9 +286,20 @@ int main() {
 		tuio->initFrame(time);
 
 		for (unsigned int i=0; i<touchPoints.size(); i++) { // touch points
-			float cursorX = (touchPoints[i].x - xMin) / (xMax - xMin);
-			float cursorY = 1 - (touchPoints[i].y - yMin)/(yMax - yMin);
+			//float cursorX = (touchPoints[i].x - xMin) / (xMax - xMin);
+			//float cursorY = 1 - (touchPoints[i].y - yMin)/(yMax - yMin);
+
+            CvPoint2D32f c=cvPoint2D32f(touchPoints[i].x - xMin,
+                                            touchPoints[i].y - yMin);
+
+            c=trans(&c, hIMat);
+
+            float cursorX=1-c.x/ 853.0f;
+            float cursorY=c.y/ 480.0f;
+			if(cursorX<0 || cursorY< 0 || cursorX>1 || cursorY>1) continue;
 			TuioCursor* cursor = tuio->getClosestTuioCursor(cursorX,cursorY);
+
+
 			// TODO improve tracking (don't move cursors away, that might be closer to another touch point)
 			if (cursor == NULL || cursor->getTuioTime() == time) {
 				tuio->addTuioCursor(cursorX,cursorY);
@@ -207,11 +312,20 @@ int main() {
 		tuio->removeUntouchedStoppedCursors();
 		tuio->commitFrame();
 
+
+#ifdef DEBUG
 		// draw debug frame
 		depth.convertTo(depth8, CV_8U, 255 / debugFrameMaxDepth); // render depth to debug frame
 		cvtColor(depth8, debug, CV_GRAY2BGR);
 		debug.setTo(debugColor0, touch);  // touch mask
-		rectangle(debug, roi, debugColor1, 2); // surface boundaries
+		        for( int i = 0; i < 4; i++ )
+        {
+            CvPoint r1 = dst_corners[i%4];
+            CvPoint r2 = dst_corners[(i+1)%4];
+            cvLine(&(IplImage)debug, cvPoint(r1.x, r1.y ),
+                cvPoint(r2.x, r2.y ), cvScalar(255,0,0,0) );
+        }
+		//rectangle(debug, roi, debugColor1, 2); // surface boundaries
 		for (unsigned int i=0; i<touchPoints.size(); i++) { // touch points
 			circle(debug, touchPoints[i], 5, debugColor2, CV_FILLED);
 		}
@@ -219,6 +333,9 @@ int main() {
 		// render debug frame (with sliders)
 		imshow(windowName, debug);
 		//imshow("image", rgb);
+
+#endif
+
 	}
 
 	return 0;

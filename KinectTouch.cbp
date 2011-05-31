@@ -76,6 +76,7 @@
 		<Unit filename="src/oscpack/osc/OscReceivedElements.h" />
 		<Unit filename="src/oscpack/osc/OscTypes.cpp" />
 		<Unit filename="src/oscpack/osc/OscTypes.h" />
+		<Unit filename="src/surfcalibration.cpp" />
 		<Extensions>
 			<envvars />
 			<code_completion />
