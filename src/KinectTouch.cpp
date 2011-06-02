@@ -43,7 +43,7 @@ using namespace TUIO;
 //---------------------------------------------------------------------------
 // Globals
 //---------------------------------------------------------------------------
-
+#define DEBUG
 // OpenNI
 xn::Context xnContext;
 xn::DepthGenerator xnDepthGenerator;
@@ -105,7 +105,7 @@ void initMarker(void) {
 
 }
 
-int calibrating=25;
+int calibrating=5;
 CvPoint dst_corners[4];
 
 
@@ -178,9 +178,12 @@ void calibrate(void)
 int main() {
 
 	const unsigned int nBackgroundTrain = 30;
-	const unsigned short touchDepthMin = 10;
-	const unsigned short touchDepthMax = 20;
-	const unsigned int touchMinArea = 50;
+	const unsigned short touchDepthMin = 20;
+	const unsigned short touchDepthMax = 35;
+
+	//const unsigned short touchDepthMin = 30;
+	//const unsigned short touchDepthMax = 50;
+	const unsigned int touchMinArea = 30;
 
 	const bool localClientMode = true; 					// connect to a local client
 
@@ -207,6 +210,9 @@ int main() {
 	Mat1b touch(640, 480); // touch mask
 
 	Mat1s background(480, 640);
+
+    Mat1s arm(640, 480);
+
 	vector<Mat1s> buffer(nBackgroundTrain);
 
 	initOpenNI("niConfig.xml");
@@ -231,18 +237,20 @@ int main() {
 	createTrackbar("yMin", windowName, &yMin, 480);
 	createTrackbar("yMax", windowName, &yMax, 480);
 */
-
+    xnImgeGenertor.SetPixelFormat( XN_PIXEL_FORMAT_RGB24);
+    xnDepthGenerator.GetAlternativeViewPointCap().SetViewPoint(xnImgeGenertor);
 	// create background model (average depth)
-	for (unsigned int i=0; i<nBackgroundTrain; i++) {
+/*	for (unsigned int i=0; i<nBackgroundTrain; i++) {
 		xnContext.WaitAndUpdateAll();
 		depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
 		buffer[i] = depth;
 	}
 	average(buffer, background);
-    xnImgeGenertor.SetPixelFormat( XN_PIXEL_FORMAT_RGB24);
-    //xnImgeGenertor.GetAlternativeViewPointCap().SetViewPoint (xnDepthGenerator);
-    xnDepthGenerator.GetAlternativeViewPointCap().SetViewPoint(xnImgeGenertor);
-	while ( waitKey(1) != 27 ) {
+*/
+
+    char key=0;
+	while ( key != 27 ) {
+
 		// read available data
 		xnContext.WaitAndUpdateAll();
 
@@ -250,7 +258,9 @@ int main() {
 		depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
 		//xnImgeGenertor.GetGrayscale8ImageMap()
 
-
+        key=waitKey(1);
+	    if(key=='c') calibrating=5;
+	    else if(key=='b') background=depth.clone();
 
 		// update rgb image
 		//rgb.data = (uchar*) xnImgeGenertor.GetRGB24ImageMap(); // segmentation fault here
@@ -261,11 +271,12 @@ int main() {
 		foreground = background - depth;
 
 		// find touch mask by thresholding (points that are close to background = touch points)
-		touch = (foreground > touchDepthMin) & (foreground < touchDepthMax);
+		arm =  (foreground>touchDepthMin);
+		touch =(foreground>touchDepthMin) & (foreground < touchDepthMax);
 
 		// extract ROI
-		Rect roi(xMin, yMin, xMax - xMin, yMax - yMin);
-		Mat touchRoi = touch(roi);
+		//Rect roi(xMin, yMin, xMax - xMin, yMax - yMin);
+		Mat touchRoi = touch; //touch(roi);
 
 		// find touch points
 		vector< vector<Point2i> > contours;
@@ -296,6 +307,11 @@ int main() {
 
             float cursorX=1-c.x/ 853.0f;
             float cursorY=c.y/ 480.0f;
+
+            cursorY-=0.5;
+            cursorY*=1.0;
+            cursorY+=0.5;
+
 			if(cursorX<0 || cursorY< 0 || cursorX>1 || cursorY>1) continue;
 			TuioCursor* cursor = tuio->getClosestTuioCursor(cursorX,cursorY);
 
@@ -315,7 +331,7 @@ int main() {
 
 #ifdef DEBUG
 		// draw debug frame
-		depth.convertTo(depth8, CV_8U, 255 / debugFrameMaxDepth); // render depth to debug frame
+		arm.convertTo(depth8, CV_8U, 255 / debugFrameMaxDepth); // render depth to debug frame
 		cvtColor(depth8, debug, CV_GRAY2BGR);
 		debug.setTo(debugColor0, touch);  // touch mask
 		        for( int i = 0; i < 4; i++ )
