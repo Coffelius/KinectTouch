@@ -90,9 +90,7 @@ int main()
     const double debugFrameMaxDepth = 4000; // maximal distance (in millimeters) for 8 bit debug depth frame quantization
     const char* windowName = "Debug";
 
-
-    initOpenNI("niConfig.xml");
-
+    namedWindow("Debug", CV_WINDOW_FULLSCREEN);
     // TUIO server object
     TuioServer* tuio;
     if (localClientMode)
@@ -104,9 +102,10 @@ int main()
         tuio = new TuioServer("192.168.0.2",3333,false);
     }
     TuioTime time;
-
+    initOpenNI("niConfig.xml");
     TouchSensor touchSensor(xnImgeGenertor, xnDepthGenerator);
     touchSensor.initMarker();
+    touchSensor.startCalibration();
 
     //namedWindow("image",CV_WINDOW_FULLSCREEN);
 

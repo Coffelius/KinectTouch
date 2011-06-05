@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1307294107 source:/home/coffee/kinect/KinectTouch/src/KinectTouch.cpp
+1307297350 source:/home/coffee/kinect/KinectTouch/src/KinectTouch.cpp
 	<iostream>
 	<vector>
 	<map>
@@ -365,7 +365,7 @@
 
 1270517080 /usr/include/opencv/highgui.hpp
 
-1307293320 /home/coffee/kinect/KinectTouch/src/TouchSensor.h
+1307297109 /home/coffee/kinect/KinectTouch/src/TouchSensor.h
 	<iostream>
 	<vector>
 	<map>
@@ -374,6 +374,6 @@
 	<XnOpenNI.h>
 	<XnCppWrapper.h>
 
-1307293855 source:/home/coffee/kinect/KinectTouch/src/TouchSensor.cpp
+1307297239 source:/home/coffee/kinect/KinectTouch/src/TouchSensor.cpp
 	"TouchSensor.h"
 
