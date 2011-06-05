@@ -44,6 +44,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="niConfig.xml" />
 		<Unit filename="src/KinectTouch.cpp" />
 		<Unit filename="src/TUIO/TuioClient.cpp" />
 		<Unit filename="src/TUIO/TuioClient.h" />
