@@ -24,10 +24,20 @@ ofxCvKalman::ofxCvKalman(float initial) {
 	//kalman->transition_matrix = cvCreateMat( 4, 1, CV_32FC1 );
 	//cvSetIdentity( kalman->transition_matrix, cvRealScalar(1) );
 	memcpy( kalman->transition_matrix->data.fl, A, sizeof(A));
+
+
+	/*
 	cvSetIdentity( kalman->measurement_matrix, cvRealScalar(1) );
 	cvSetIdentity( kalman->process_noise_cov, cvRealScalar(1e-8) );
 	cvSetIdentity( kalman->measurement_noise_cov, cvRealScalar(1e-8) );
 	cvSetIdentity( kalman->error_cov_post, cvRealScalar(1e-5));
+    */
+
+    cvSetIdentity(kalman->measurement_matrix, cvRealScalar(1));
+    cvSetIdentity(kalman->process_noise_cov, cvRealScalar(0.4));
+    cvSetIdentity(kalman->measurement_noise_cov, cvRealScalar(3));
+    cvSetIdentity(kalman->error_cov_post, cvRealScalar(1));
+
 
 	kalman->state_post->data.fl[0]=initial;
 

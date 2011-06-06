@@ -201,18 +201,21 @@ public:
 
 
 void TouchSensor::initKalman(void) {
-    memset(tuioPointSmoothed, 0, 32*2*sizeof(ofxCvKalman*));
+    memset(tuioPointSmoothed, 0, 32*3*sizeof(ofxCvKalman*));
 }
+
 bool TouchSensor::updateKalman(int id, Point3f &p) {
     printf("id:%d\n", id);
 	if (id>=32) return false;
-	if(tuioPointSmoothed[id*2] == NULL) {
+	if(tuioPointSmoothed[id*3] == NULL) {
 	    printf("Creado");
-		tuioPointSmoothed[id*2] = new ofxCvKalman(p.x);
-		tuioPointSmoothed[id*2+1] = new ofxCvKalman(p.y);
+		tuioPointSmoothed[id*3] = new ofxCvKalman(p.x);
+		tuioPointSmoothed[id*3+1] = new ofxCvKalman(p.y);
+		tuioPointSmoothed[id*3+2] = new ofxCvKalman(p.z);
 	} else {
-	    p.x=tuioPointSmoothed[id*2]->correct(p.x);
-		p.y=tuioPointSmoothed[id*2+1]->correct(p.y);
+	    p.x=tuioPointSmoothed[id*3]->correct(p.x);
+		p.y=tuioPointSmoothed[id*3+1]->correct(p.y);
+		p.z=tuioPointSmoothed[id*3+2]->correct(p.z);
 		printf("Corregido");
 	}
 
@@ -221,11 +224,13 @@ bool TouchSensor::updateKalman(int id, Point3f &p) {
 
 void TouchSensor::clearKalman(int id) {
 	if (id>=32) return;
-	if(tuioPointSmoothed[id*2]) {
-		delete tuioPointSmoothed[id*2];
-		tuioPointSmoothed[id*2] = NULL;
-		delete tuioPointSmoothed[id*2+1];
-		tuioPointSmoothed[id*2+1] = NULL;
+	if(tuioPointSmoothed[id*3]) {
+		delete tuioPointSmoothed[id*3];
+		tuioPointSmoothed[id*3] = NULL;
+		delete tuioPointSmoothed[id*3+1];
+		tuioPointSmoothed[id*3+1] = NULL;
+		delete tuioPointSmoothed[id*3+2];
+		tuioPointSmoothed[id*3+2] = NULL;
 	}
 }
 
@@ -250,7 +255,7 @@ void TouchSensor::update(void)
     warpPerspective(foreground, wforeground, _hIMat, Size(853, 480), INTER_NEAREST);
 
 
-    arm =  (wforeground>15);
+    arm =  (wforeground>touchDepthMin);
 
 
     Mat1b touchRoi=arm.clone();
@@ -265,7 +270,7 @@ void TouchSensor::update(void)
 
 
         // find touch points by area thresholding
-        if ( area > 5000/*touchMinArea*/ )
+        if ( area > touchMinArea )
         {
 
             float mind=0;
@@ -324,12 +329,12 @@ void TouchSensor::update(void)
                 p2.x/=dist;
                 p2.y/=dist;
 
-                Point2i p3=Point2i(curve[p].x + p2.x*10, curve[p].y + p2.y*10);
+                Point2i p3=Point2i(curve[p].x + p2.x*touchDistance, curve[p].y + p2.y*touchDistance);
 
                 short d=((short*)wforeground.data)[p3.x + p3.y*853];
                 //if(d<40)
                 //{
-                    touchPoints.push_back(Point3f(curve[p].x, curve[p].y, d<40 ? 1:0));
+                    touchPoints.push_back(Point3f(curve[p].x, curve[p].y, d<touchDistanceMax ? 1:0));
                     oppositeTouchPoints.push_back(curve[op]);
                     areas.push_back(area);
 
@@ -388,15 +393,35 @@ void TouchSensor::update(void)
     vector <bool>lastRemoved;
     vector <bool>newAdded;
 
+
     lastRemoved.assign(lastLabels.size(), true);
     newAdded.assign(labels.size(), false);
-    int i,j;
+    int i,j,k;
     for(i=0;i<labels.size();i++) {
         for(j=0;j<lastLabels.size();j++) {
             if(overlapped(blobs[i], lastBlobs[j])) {
                 labels[i]=lastLabels[j];
                 lastRemoved[j]=false;
                 break;
+            }
+        }
+    }
+
+
+    // new label when two contours collide
+    for(i=0;i<labels.size();i++) {
+        for(j=0;j<labels.size();j++) {
+            if(i==j) continue;
+
+            if(labels[i]==labels[j]) {
+                for(k=0;k<lastLabels.size();k++) {
+                    if(lastLabels[k]==labels[i])   {
+                        lastRemoved[k]=true;
+                    }
+                }
+                //lastRemoved[labels[i]]=true;
+                labels[i]=0;
+                labels[j]=0;
             }
         }
     }
@@ -413,9 +438,7 @@ void TouchSensor::update(void)
         if(labels[i]==0) {
             labels[i]=++maxi;
             newAdded[i]=true;
-            //blobAdded(i);
         }
-
     }
 
     bool b;
@@ -423,7 +446,7 @@ void TouchSensor::update(void)
         b=false;
         for(j=0;j<lastLabels.size();j++) {
             if(labels[i]==lastLabels[j]) {
-                if(touchPoints[i].z && !this->touchPoints[j].z) {
+                if(touchPoints[i].z > touchZ && this->touchPoints[j].z <= touchZ) {
                     b=true;
                 }
                 break;
@@ -434,17 +457,17 @@ void TouchSensor::update(void)
 
     // movida kalman
 
-    printf("%d, %d\n", lastRemoved.size(), labels.size() );
+    //printf("%d, %d\n", lastRemoved.size(), labels.size() );
     for(i=0;i<lastRemoved.size();i++) {
         if(lastRemoved[i]) {
         clearKalman(lastLabels[i]);
-            printf("Borrado\n");
+            //printf("Borrado\n");
         }
     }
 
 
     for(i=0;i<labels.size();i++) {
-        if(!updateKalman(labels[i], touchPoints[i])) printf("ERROR");
+        updateKalman(labels[i], touchPoints[i]);
     }
 
 
@@ -454,11 +477,8 @@ void TouchSensor::update(void)
     Scalar white(255,255,255);
     Scalar black(0,0,0,0);
     for(i=0;i<blobs.size();i++) {
-        drawContours(out, blobs, i, colors[labels[i]%8], touchPoints[i].z ? CV_FILLED:4);
-
-        circle(out, Point2i(touchPoints[i].x, touchPoints[i].y), 10, white, touchPoints[i].z ? CV_FILLED:2);
-        //circle(out, Point2i(touchPoints[i].x, touchPoints[i].y), 5,  touchPoints[i].z ? white:black, CV_FILLED);
-        //touchPoints
+        drawContours(out, blobs, i, colors[labels[i]%8], touchPoints[i].z > touchZ ? CV_FILLED:4);
+        circle(out, Point2i(touchPoints[i].x, touchPoints[i].y), 10, white, touchPoints[i].z > touchZ ? CV_FILLED:2);
     }
     flip(out, out,1);
 
@@ -466,13 +486,10 @@ void TouchSensor::update(void)
     this->newTouch=newTouch;
     lastBlobs=blobs;
     this->touchPoints=touchPoints;
-    //this->lastOTP=oppositeTouchPoints;
     lastLabels=labels;
-    //this->areas=areas;
 }
-void TouchSensor::startCalibration(void) {
-    //iGen.StartGenerating();
 
+void TouchSensor::startCalibration(void) {
     calibrating=5;
 }
 
@@ -480,14 +497,18 @@ TouchSensor::TouchSensor(xn::ImageGenerator &image, xn::DepthGenerator &_depth)
 {
     iGen=image;
     dGen=_depth;
-//    tracker=NULL;
+
     iGen.SetPixelFormat( XN_PIXEL_FORMAT_RGB24);
     dGen.GetAlternativeViewPointCap().SetViewPoint(iGen);
 
 
-    touchDepthMin =10;
+    touchDepthMin =15;
     touchDepthMax =30;
-    touchMinArea = 40;
+    touchMinArea = 2000;
+    touchZ=0.5;
+    // para pantalla 5 monitor 10
+    touchDistanceMax = 40;
+    touchDistance = 5;
 
     imageKeypoints = 0;
     imageDescriptors = 0;

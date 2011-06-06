@@ -117,7 +117,7 @@ int main()
 
         for (unsigned int i=0; i<touchPoints.size(); i++)   // touch points
         {
-            if(!touchPoints[i].z) continue;
+            if(touchPoints[i].z<touchSensor.touchZ) continue;
             CvPoint2D32f c=cvPoint2D32f(touchPoints[i].x ,
                                         touchPoints[i].y);
 

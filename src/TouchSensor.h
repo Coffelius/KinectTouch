@@ -25,7 +25,9 @@ public:
     unsigned short touchDepthMin;
     unsigned short touchDepthMax;
     unsigned int touchMinArea;
-
+    unsigned short touchDistanceMax;
+    unsigned short touchDistance;
+    float touchZ;
     CvSeq *imageKeypoints, *imageDescriptors;
     CvPoint src_corners[4];
     int calibrating;
@@ -61,7 +63,7 @@ public:
     void startCalibration(void);
 
 
-    ofxCvKalman *tuioPointSmoothed[32*2];
+    ofxCvKalman *tuioPointSmoothed[32*3];
 
     void initKalman(void);
     bool updateKalman(int id, Point3f &p);

@@ -18,6 +18,7 @@
 					<Add directory="/usr/include/ni" />
 					<Add directory="src/TUIO" />
 					<Add directory="src/oscpack" />
+					<Add directory="libs" />
 				</Compiler>
 				<Linker>
 					<Add library="glut" />
@@ -44,6 +45,8 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="libs/ofxCvKalman.cpp" />
+		<Unit filename="libs/ofxCvKalman.h" />
 		<Unit filename="niConfig.xml" />
 		<Unit filename="src/KinectTouch.cpp" />
 		<Unit filename="src/TUIO/TuioClient.cpp" />
