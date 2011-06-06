@@ -16,7 +16,6 @@
 					<Add option="-DUSE_GLUT" />
 					<Add directory="/usr/include/nite" />
 					<Add directory="/usr/include/ni" />
-					<Add directory="/usr/include/opencv" />
 					<Add directory="src/TUIO" />
 					<Add directory="src/oscpack" />
 				</Compiler>
@@ -24,8 +23,9 @@
 					<Add library="glut" />
 					<Add library="OpenNI" />
 					<Add library="XnVNite_1_3_1" />
-					<Add library="cv" />
-					<Add library="highgui" />
+					<Add library="opencv_core" />
+					<Add library="opencv_highgui" />
+					<Add library="opencv_legacy" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -57,6 +57,8 @@
 		<Unit filename="src/TUIO/TuioServer.h" />
 		<Unit filename="src/TUIO/TuioTime.cpp" />
 		<Unit filename="src/TUIO/TuioTime.h" />
+		<Unit filename="src/TouchSensor.cpp" />
+		<Unit filename="src/TouchSensor.h" />
 		<Unit filename="src/oscpack/ip/IpEndpointName.cpp" />
 		<Unit filename="src/oscpack/ip/IpEndpointName.h" />
 		<Unit filename="src/oscpack/ip/NetworkingUtils.h" />

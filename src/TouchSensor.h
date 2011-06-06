@@ -17,6 +17,9 @@ using namespace cv;
 #include <XnCppWrapper.h>
 using namespace xn;
 
+#include <ofxCvKalman.h>
+
+
 class TouchSensor  {
 public:
     unsigned short touchDepthMin;
@@ -47,6 +50,8 @@ public:
     vector<vector<Point2i> > lastBlobs;
     vector<int>lastLabels;
     vector<bool>newTouch;
+
+
     int highLabel;
     TouchSensor(xn::ImageGenerator &image, xn::DepthGenerator &_depth);
     void calibrate(void);
@@ -54,6 +59,15 @@ public:
     void update(void);
     void blobStuff(Mat &arm);
     void startCalibration(void);
+
+
+    ofxCvKalman *tuioPointSmoothed[32*2];
+
+    void initKalman(void);
+    bool updateKalman(int id, Point3f &p);
+    void clearKalman(int id);
+
+
 };
 
 #endif

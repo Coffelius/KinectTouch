@@ -76,21 +76,12 @@ int initOpenNI(const XnChar* fname)
     return 0;
 }
 
-
-
-
-
-
-
-
-
 int main()
 {
     const bool localClientMode = true; 					// connect to a local client
-    const double debugFrameMaxDepth = 4000; // maximal distance (in millimeters) for 8 bit debug depth frame quantization
-    const char* windowName = "Debug";
+    initOpenNI("niConfig.xml");
 
-    namedWindow("Debug", CV_WINDOW_FULLSCREEN);
+
     // TUIO server object
     TuioServer* tuio;
     if (localClientMode)
@@ -102,14 +93,10 @@ int main()
         tuio = new TuioServer("192.168.0.2",3333,false);
     }
     TuioTime time;
-    initOpenNI("niConfig.xml");
+
     TouchSensor touchSensor(xnImgeGenertor, xnDepthGenerator);
     touchSensor.initMarker();
     touchSensor.startCalibration();
-
-    //namedWindow("image",CV_WINDOW_FULLSCREEN);
-
-
 
     char key=0;
 
@@ -130,38 +117,15 @@ int main()
 
         for (unsigned int i=0; i<touchPoints.size(); i++)   // touch points
         {
-            //float cursorX = (touchPoints[i].x - xMin) / (xMax - xMin);
-            //float cursorY = 1 - (touchPoints[i].y - yMin)/(yMax - yMin);
-
             if(!touchPoints[i].z) continue;
             CvPoint2D32f c=cvPoint2D32f(touchPoints[i].x ,
                                         touchPoints[i].y);
 
-            //c=trans(&c, hIMat);
 
             float cursorX=1-c.x/ 853.0f;
             float cursorY=c.y/ 480.0f;
 
-            /*
-                        cursorY-=0.5;
-                        cursorY*=1.0;
-                        cursorY+=0.5;
-            */
             if(cursorX<0 || cursorY< 0 || cursorX>1 || cursorY>1) continue;
-            /*TuioCursor* cursor = tuio->getClosestTuioCursor(cursorX,cursorY);
-
-
-
-            // TODO improve tracking (don't move cursors away, that might be closer to another touch point)
-            if (cursor == NULL || cursor->getTuioTime() == time)
-            {
-                tuio->addTuioCursor(cursorX,cursorY);
-            }
-            else
-            {
-                tuio->updateTuioCursor(cursor, cursorX, cursorY);
-            }*/
-
 
             if(touchSensor.newTouch[i])
                 tuio->addTuioCursor(cursorX,cursorY);

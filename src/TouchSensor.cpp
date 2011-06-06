@@ -2,7 +2,6 @@
 //#include <Blob.h>
 //#include <BlobResult.h>
 
-
     const Scalar debugColor0(0,0,128);
     const Scalar debugColor1(255,0,0);
     const Scalar debugColor2(255,255,255);
@@ -110,7 +109,7 @@ void testCloud(Mat1s &depth) {
     imshow("cloud", rgb);
 
 }*/
-//CvScalar colors[8]={CV_RGB(255,0,0), CV_RGB(0,255,0), CV_RGB(0,0,255), CV_RGB(255,255,0), CV_RGB(255,0,255), CV_RGB(0,255,255), CV_RGB(255,255,255), CV_RGB(128,128,128)};
+const CvScalar colors[8]={CV_RGB(255,0,0), CV_RGB(0,255,0), CV_RGB(0,0,255), CV_RGB(255,255,0), CV_RGB(255,0,255), CV_RGB(0,255,255), CV_RGB(255,255,255), CV_RGB(128,128,128)};
 
 //CBlobResult lastBlobs;
 void TouchSensor::blobStuff(Mat &arm) {
@@ -181,10 +180,57 @@ bool overlapped(vector<Point2i>&c1, vector<Point2i>&c2) {
     }
     return false;
 }
+
+/*
+typedef struct {
+    int contourID;
+    int label;
+    Point3f cursor;
+    Point2f opposite;
+} BLOB;
+
+class ArmTracker {
+public:
+    vector<vector<Point2i> > contours;
+
+
+    void process(Mat &src);
+
+}*/
+
+
+
+void TouchSensor::initKalman(void) {
+    memset(tuioPointSmoothed, 0, 32*2*sizeof(ofxCvKalman*));
+}
+bool TouchSensor::updateKalman(int id, Point3f &p) {
+    printf("id:%d\n", id);
+	if (id>=32) return false;
+	if(tuioPointSmoothed[id*2] == NULL) {
+	    printf("Creado");
+		tuioPointSmoothed[id*2] = new ofxCvKalman(p.x);
+		tuioPointSmoothed[id*2+1] = new ofxCvKalman(p.y);
+	} else {
+	    p.x=tuioPointSmoothed[id*2]->correct(p.x);
+		p.y=tuioPointSmoothed[id*2+1]->correct(p.y);
+		printf("Corregido");
+	}
+
+	return true;
+}
+
+void TouchSensor::clearKalman(int id) {
+	if (id>=32) return;
+	if(tuioPointSmoothed[id*2]) {
+		delete tuioPointSmoothed[id*2];
+		tuioPointSmoothed[id*2] = NULL;
+		delete tuioPointSmoothed[id*2+1];
+		tuioPointSmoothed[id*2+1] = NULL;
+	}
+}
+
 void TouchSensor::update(void)
 {
-
-
     vector<vector<Point2i> > contours;
     vector<vector<Point2i> > blobs;
     vector<Point3f> touchPoints;
@@ -192,9 +238,6 @@ void TouchSensor::update(void)
     vector<int>labels;
 
     Mat depth(480, 640, CV_16UC1, (uchar*)dGen.GetDepthMap(), 0);
-    //depth.data = (uchar*)dGen.GetDepthMap();
-
-
 
     if(calibrating) {
         calibrate();
@@ -204,29 +247,15 @@ void TouchSensor::update(void)
     // extract foreground by simple subtraction of very basic background model
     foreground = background - depth;
     Mat _hIMat(3, 3, CV_64F, hIMat, 0);
-    warpPerspective(foreground, wforeground, _hIMat, Size(853, 480), INTER_LINEAR);
+    warpPerspective(foreground, wforeground, _hIMat, Size(853, 480), INTER_NEAREST);
 
 
     arm =  (wforeground>15);
 
-    /*Mat1b lala(480,853);
-    lala=wforeground;
-    threshold(lala, lala, 15, 255, THRESH_BINARY_INV);
-
-    //lala=wforeground<=15;
-    blobStuff(lala);
-    */
-    //touch =(wforeground>10) & (wforeground < 20);
 
     Mat1b touchRoi=arm.clone();
-    //warpPerspective(, Mat& dst, const Mat& M, Size dsize, int
-    // find touch points
 
-    //	erode(touchRoi, touchRoi,  getStructuringElement(MORPH_RECT, Size(1,1)));
     findContours(touchRoi, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point2i(xMin, yMin));
-
-
-    //blur(wforeground, wforeground, Size(853,480));
 
     vector<double> areas;
     for (unsigned int i=0; i<contours.size(); i++)
@@ -236,7 +265,7 @@ void TouchSensor::update(void)
 
 
         // find touch points by area thresholding
-        if ( area > 2000/*touchMinArea*/ )
+        if ( area > 5000/*touchMinArea*/ )
         {
 
             float mind=0;
@@ -252,9 +281,7 @@ void TouchSensor::update(void)
                     if(j==k) continue;
                     int x=curve[j].x-curve[k].x;
                     int y=curve[j].y-curve[k].y;
-                    //x/=2;y/=2;
-                    //x-=853/2;
-                    //y-=240;
+
                     float d=sqrt( x*x+y*y);
                     if(d>mind)
                     {
@@ -358,12 +385,17 @@ void TouchSensor::update(void)
 #endif
 
 
+    vector <bool>lastRemoved;
+    vector <bool>newAdded;
 
+    lastRemoved.assign(lastLabels.size(), true);
+    newAdded.assign(labels.size(), false);
     int i,j;
     for(i=0;i<labels.size();i++) {
         for(j=0;j<lastLabels.size();j++) {
             if(overlapped(blobs[i], lastBlobs[j])) {
                 labels[i]=lastLabels[j];
+                lastRemoved[j]=false;
                 break;
             }
         }
@@ -380,8 +412,9 @@ void TouchSensor::update(void)
     for(i=0;i<labels.size();i++) {
         if(labels[i]==0) {
             labels[i]=++maxi;
+            newAdded[i]=true;
+            //blobAdded(i);
         }
-            //newTouch.push_back(true);
 
     }
 
@@ -398,8 +431,38 @@ void TouchSensor::update(void)
         }
         newTouch.push_back(b);
     }
-    //printf("Blobs %d\n", blobs.size());
 
+    // movida kalman
+
+    printf("%d, %d\n", lastRemoved.size(), labels.size() );
+    for(i=0;i<lastRemoved.size();i++) {
+        if(lastRemoved[i]) {
+        clearKalman(lastLabels[i]);
+            printf("Borrado\n");
+        }
+    }
+
+
+    for(i=0;i<labels.size();i++) {
+        if(!updateKalman(labels[i], touchPoints[i])) printf("ERROR");
+    }
+
+
+    Mat3b out(480,853);
+    memset(out.data, 0, 480*853*3);
+    Scalar red(255,0,0,0);
+    Scalar white(255,255,255);
+    Scalar black(0,0,0,0);
+    for(i=0;i<blobs.size();i++) {
+        drawContours(out, blobs, i, colors[labels[i]%8], touchPoints[i].z ? CV_FILLED:4);
+
+        circle(out, Point2i(touchPoints[i].x, touchPoints[i].y), 10, white, touchPoints[i].z ? CV_FILLED:2);
+        //circle(out, Point2i(touchPoints[i].x, touchPoints[i].y), 5,  touchPoints[i].z ? white:black, CV_FILLED);
+        //touchPoints
+    }
+    flip(out, out,1);
+
+    imshow("blobs2", out);
     this->newTouch=newTouch;
     lastBlobs=blobs;
     this->touchPoints=touchPoints;
@@ -440,6 +503,8 @@ TouchSensor::TouchSensor(xn::ImageGenerator &image, xn::DepthGenerator &_depth)
     foreground.create(480,640, CV_16UC1); //=Mat1s(480, 640);
     wforeground.create(480,640, CV_16UC1); //=Mat1s(480, 853);
     arm.create(480,853, CV_8UC1); //=Mat1b(480, 853);
+
+    initKalman();
 
 }
 
