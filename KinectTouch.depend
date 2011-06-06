@@ -1,10 +1,10 @@
 # depslib dependency file v1.0
-1307297350 source:/home/coffee/kinect/KinectTouch/src/KinectTouch.cpp
+1307328129 source:/home/coffee/kinect/KinectTouch/src/KinectTouch.cpp
 	<iostream>
 	<vector>
 	<map>
-	<highgui.h>
-	<cv.h>
+	<opencv2/highgui/highgui.hpp>
+	<opencv2/opencv.hpp>
 	<XnOpenNI.h>
 	<XnCppWrapper.h>
 	"TuioServer.h"
@@ -276,9 +276,8 @@
 1306375306 source:/home/coffee/kinect/KinectTouch/src/oscpack/osc/OscTypes.cpp
 	"OscTypes.h"
 
-1306875167 source:/home/coffee/kinect/KinectTouch/src/surfcalibration.cpp
-	<cv.h>
-	<highgui.h>
+1307313174 source:/home/coffee/kinect/KinectTouch/src/surfcalibration.cpp
+	<opencv2/opencv.hpp>
 	<ctype.h>
 	<stdio.h>
 	<stdlib.h>
@@ -365,15 +364,77 @@
 
 1270517080 /usr/include/opencv/highgui.hpp
 
-1307297109 /home/coffee/kinect/KinectTouch/src/TouchSensor.h
+1307328129 /home/coffee/kinect/KinectTouch/src/TouchSensor.h
 	<iostream>
 	<vector>
 	<map>
-	<highgui.h>
-	<cv.h>
+	<opencv2/opencv.hpp>
+	<opencv2/legacy/blobtrack.hpp>
 	<XnOpenNI.h>
 	<XnCppWrapper.h>
 
-1307297239 source:/home/coffee/kinect/KinectTouch/src/TouchSensor.cpp
+1307329279 source:/home/coffee/kinect/KinectTouch/src/TouchSensor.cpp
 	"TouchSensor.h"
+
+1210771052 source:/home/coffee/kinect/KinectTouch/libs/cvblobs/BlobContour.cpp
+	"BlobContour.h"
+	"cxcore.h"
+
+1216724462 /home/coffee/kinect/KinectTouch/libs/cvblobs/BlobContour.h
+	"list"
+	"cv.h"
+	"cxtypes.h"
+
+1217492544 source:/home/coffee/kinect/KinectTouch/libs/cvblobs/BlobOperators.cpp
+	<limits.h>
+	"BlobOperators.h"
+
+1307301543 /home/coffee/kinect/KinectTouch/libs/cvblobs/BlobOperators.h
+	"Blob.h"
+
+1239829404 /home/coffee/kinect/KinectTouch/libs/cvblobs/blob.h
+	"cxcore.h"
+	"BlobLibraryConfiguration.h"
+	"BlobContour.h"
+	"..\inspecta\DesignPatterns\ObjectFactory.h"
+
+1307301633 /home/coffee/kinect/KinectTouch/libs/cvblobs/BlobLibraryConfiguration.h
+
+1239829404 /home/coffee/kinect/KinectTouch/libs/cvblobs/Blob.h
+	"cxcore.h"
+	"BlobLibraryConfiguration.h"
+	"BlobContour.h"
+	"..\inspecta\DesignPatterns\ObjectFactory.h"
+
+1239953808 source:/home/coffee/kinect/KinectTouch/libs/cvblobs/BlobResult.cpp
+	<limits.h>
+	<stdio.h>
+	<functional>
+	<algorithm>
+	"BlobResult.h"
+	<afx.h>
+	<afxwin.h>
+
+1239829404 /home/coffee/kinect/KinectTouch/libs/cvblobs/BlobResult.h
+	"BlobLibraryConfiguration.h"
+	<math.h>
+	"cxcore.h"
+	"matrixCV.h"
+	"vector"
+	<vector>
+	<functional>
+	"Blob.h"
+	"BlobOperators.h"
+	"ComponentLabeling.h"
+
+1216724462 /home/coffee/kinect/KinectTouch/libs/cvblobs/ComponentLabeling.h
+	"vector"
+	"BlobContour.h"
+	"Blob.h"
+
+1239694586 source:/home/coffee/kinect/KinectTouch/libs/cvblobs/ComponentLabeling.cpp
+	"ComponentLabeling.h"
+
+1307301641 source:/home/coffee/kinect/KinectTouch/libs/cvblobs/blob.cpp
+	"Blob.h"
 

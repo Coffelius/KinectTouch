@@ -19,8 +19,8 @@
 using namespace std;
 
 // openCV
-#include <highgui.h>
-#include <cv.h>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
 using namespace cv;
 
 // openNI
@@ -112,6 +112,7 @@ int main()
 
 
     char key=0;
+
     while ( key != 27 )
     {
         key=waitKey(1);
@@ -121,18 +122,18 @@ int main()
         xnContext.WaitAndUpdateAll();
         touchSensor.update();
 
-        vector<Point2f> touchPoints=touchSensor.touchPoints;
+        vector<Point3f> touchPoints=touchSensor.touchPoints;
 
         // send TUIO cursors
         time = TuioTime::getSessionTime();
         tuio->initFrame(time);
-
 
         for (unsigned int i=0; i<touchPoints.size(); i++)   // touch points
         {
             //float cursorX = (touchPoints[i].x - xMin) / (xMax - xMin);
             //float cursorY = 1 - (touchPoints[i].y - yMin)/(yMax - yMin);
 
+            if(!touchPoints[i].z) continue;
             CvPoint2D32f c=cvPoint2D32f(touchPoints[i].x ,
                                         touchPoints[i].y);
 
@@ -147,7 +148,8 @@ int main()
                         cursorY+=0.5;
             */
             if(cursorX<0 || cursorY< 0 || cursorX>1 || cursorY>1) continue;
-            TuioCursor* cursor = tuio->getClosestTuioCursor(cursorX,cursorY);
+            /*TuioCursor* cursor = tuio->getClosestTuioCursor(cursorX,cursorY);
+
 
 
             // TODO improve tracking (don't move cursors away, that might be closer to another touch point)
@@ -158,7 +160,18 @@ int main()
             else
             {
                 tuio->updateTuioCursor(cursor, cursorX, cursorY);
+            }*/
+
+
+            if(touchSensor.newTouch[i])
+                tuio->addTuioCursor(cursorX,cursorY);
+            else {
+                TuioCursor* cursor = tuio->getClosestTuioCursor(cursorX,cursorY);
+                if(cursor) {
+                    tuio->updateTuioCursor(cursor, cursorX, cursorY);
+                }
             }
+
         }
 
         tuio->stopUntouchedMovingCursors();

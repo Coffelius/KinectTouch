@@ -5,8 +5,9 @@
  * liuliu.1987+opencv@gmail.com
  */
 
-#include <cv.h>
-#include <highgui.h>
+#include <opencv2/opencv.hpp>
+//#include <cv.h>
+//#include <highgui.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
